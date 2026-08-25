@@ -21,6 +21,7 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
             using var dialog = new OpenFileDialog
             {
                 Filter = "Wave ファイル (*.wav)|*.wav|すべてのファイル (*.*)|*.*",
+                InitialDirectory = AppContext.BaseDirectory,
             };
             if (dialog.ShowDialog(this) == DialogResult.OK)
             {
