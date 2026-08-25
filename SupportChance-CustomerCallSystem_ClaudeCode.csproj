@@ -9,4 +9,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- 同梱のサンプル音声を、exeと同じフォルダの Assets\Sounds にコピーする。
+         (SDKの既定グロブで既に None として拾われているため Include ではなく
+          Update でメタデータだけ追加する。Include だと重複項目エラーになる) -->
+    <None Update="Assets\Sounds\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

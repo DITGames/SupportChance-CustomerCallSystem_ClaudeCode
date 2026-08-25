@@ -21,12 +21,22 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
             using var dialog = new OpenFileDialog
             {
                 Filter = "Wave ファイル (*.wav)|*.wav|すべてのファイル (*.*)|*.*",
-                InitialDirectory = AppContext.BaseDirectory,
+                InitialDirectory = GetSoundsInitialDirectory(),
             };
             if (dialog.ShowDialog(this) == DialogResult.OK)
             {
                 txtPath.Text = dialog.FileName;
             }
+        }
+
+        /// <summary>
+        /// 参照ダイアログの初期フォルダ。exe配下の Assets\Sounds があればそこを、
+        /// なければexeのあるフォルダをフォールバックとして使う。
+        /// </summary>
+        private static string GetSoundsInitialDirectory()
+        {
+            var soundsDir = Path.Combine(AppContext.BaseDirectory, "Assets", "Sounds");
+            return Directory.Exists(soundsDir) ? soundsDir : AppContext.BaseDirectory;
         }
 
         private void BtnOk_Click(object? sender, EventArgs e)
