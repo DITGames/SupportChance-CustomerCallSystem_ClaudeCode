@@ -25,8 +25,13 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
         private const int CompactSlotWidth = 150;
         private const int CompactButtonHeight = 56;
 
+        private const float MaxNumberFontSize = 118F;
+        private const float MinNumberFontSize = 36F;
+        private const float NumberFontStep = 4F;
+
         private static readonly Color PrimaryColor = Color.FromArgb(56, 142, 220);
         private static readonly Color CompactColor = Color.FromArgb(150, 150, 150);
+        private static readonly Color CompactSlotBackColor = Color.FromArgb(246, 246, 248);
 
         /// <summary>選択されたアクションのインデックス(コンストラクタに渡した順)。×で閉じた場合は -1。</summary>
         public int SelectedActionIndex { get; private set; } = -1;
@@ -46,8 +51,38 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
             {
                 if (e.KeyCode == Keys.Escape) Close();
             };
+            // 番号の桁数に関わらず表示エリアに収まる最大の文字サイズへ調整する。
+            // (コンストラクタ時点ではまだ最終的なコントロールサイズが確定していないため、
+            //  レイアウト完了直後の Load で計算する)
+            Load += (_, _) => FitNumberFont();
 
             BuildActionButtons(actions);
+        }
+
+        /// <summary>lblNumber の表示領域に収まる最大のフォントサイズへ調整する。</summary>
+        private void FitNumberFont()
+        {
+            var bounds = lblNumber.ClientSize;
+            if (bounds.Width <= 0 || bounds.Height <= 0) return;
+
+            var availableWidth = bounds.Width - 20;
+            var availableHeight = bounds.Height - 10;
+            var text = lblNumber.Text;
+
+            var chosenSize = MinNumberFontSize;
+            for (var size = MaxNumberFontSize; size >= MinNumberFontSize; size -= NumberFontStep)
+            {
+                using var candidate = new Font("Yu Gothic UI", size, FontStyle.Bold);
+                var measured = TextRenderer.MeasureText(text, candidate);
+                if (measured.Width <= availableWidth && measured.Height <= availableHeight)
+                {
+                    chosenSize = size;
+                    break;
+                }
+            }
+
+            lblNumber.Font.Dispose();
+            lblNumber.Font = new Font("Yu Gothic UI", chosenSize, FontStyle.Bold);
         }
 
         private void BuildActionButtons(ActionSpec[] actions)
@@ -58,17 +93,28 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
 
             if (compactActions.Length > 0)
             {
-                // 主要ボタンの右側に細い専用スペースを確保し、その中でも一番下にだけ
-                // 小さく配置する(上側は空白のまま)ことで誤タップを防ぐ。
-                var pnlCompact = new Panel { Dock = DockStyle.Right, Width = CompactSlotWidth };
+                // 主要ボタンの右側に、うっすら色分けした専用スペースを確保し、その中でも
+                // 一番下にだけ小さく配置する(上側は空白のまま)ことで誤タップを防ぐ。
+                var pnlCompact = new Panel
+                {
+                    Dock = DockStyle.Right,
+                    Width = CompactSlotWidth,
+                    BackColor = CompactSlotBackColor,
+                    Padding = new Padding(12),
+                };
                 pnlActions.Controls.Add(pnlCompact);
+
+                // 主要ボタンとの間にはっきりとした隙間を作る(Panel/DockではMarginが
+                // 効かないため、専用のスペーサーで隙間を確保する)。
+                var pnlGap = new Panel { Dock = DockStyle.Right, Width = 16 };
+                pnlActions.Controls.Add(pnlGap);
 
                 foreach (var (spec, index) in compactActions.Reverse())
                 {
                     var button = CreateActionButton(spec, index);
                     button.Dock = DockStyle.Bottom;
                     button.Height = CompactButtonHeight;
-                    button.Margin = new Padding(6, 8, 0, 0);
+                    button.Margin = new Padding(0, 8, 0, 0);
                     pnlCompact.Controls.Add(button);
                 }
             }
@@ -83,7 +129,7 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
                 pnlMain.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F / mainActions.Length));
                 var button = CreateActionButton(spec, index);
                 button.Dock = DockStyle.Fill;
-                button.Margin = new Padding(10, 0, 10, 0);
+                button.Margin = new Padding(mainActions.Length > 1 ? 8 : 0, 4, mainActions.Length > 1 ? 8 : 0, 4);
                 pnlMain.Controls.Add(button, column, 0);
             }
             pnlActions.Controls.Add(pnlMain);

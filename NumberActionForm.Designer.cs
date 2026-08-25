@@ -92,13 +92,13 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
             pnlContent.Controls.Add(lblNumber);
             pnlContent.Name = "pnlContent";
 
-            // NumberActionForm
+            // NumberActionForm: 通常のウィンドウ(タイトルバー付きダイアログ)として表示する。
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            BackColor = System.Drawing.Color.FromArgb(60, 60, 72);
-            Padding = new System.Windows.Forms.Padding(6);
+            BackColor = System.Drawing.Color.White;
             ClientSize = new System.Drawing.Size(820, 560);
             Controls.Add(pnlContent);
-            FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+            ControlBox = false;
+            FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             KeyPreview = true;
             MaximizeBox = false;
             MinimizeBox = false;
