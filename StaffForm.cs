@@ -198,7 +198,7 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
         {
             using var popup = new NumberActionForm(
                 number,
-                new ActionSpec("再コール"),
+                new ActionSpec("再コール", Compact: true, AccentColor: Color.FromArgb(60, 160, 130)),
                 new ActionSpec("削除"));
             popup.ShowDialog(this);
 

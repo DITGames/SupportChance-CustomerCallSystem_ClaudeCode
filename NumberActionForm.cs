@@ -11,7 +11,10 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
     /// <param name="ConfirmMessage">
     /// null でなければ、実行前にこのメッセージで確認ダイアログ(はい/いいえ、既定フォーカスは「いいえ」)を表示する。
     /// </param>
-    public readonly record struct ActionSpec(string Label, bool Compact = false, string? ConfirmMessage = null);
+    /// <param name="AccentColor">
+    /// ボタンの背景色。null の場合は既定色(主要ボタンは青、Compactボタンはグレー)を使う。
+    /// </param>
+    public readonly record struct ActionSpec(string Label, bool Compact = false, string? ConfirmMessage = null, Color? AccentColor = null);
 
     /// <summary>
     /// 番号ボタンをタップした際に表示する、大きな操作ポップアップ。
@@ -92,7 +95,7 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
             {
                 Text = spec.Label,
                 FlatStyle = FlatStyle.Flat,
-                BackColor = spec.Compact ? CompactColor : PrimaryColor,
+                BackColor = spec.AccentColor ?? (spec.Compact ? CompactColor : PrimaryColor),
                 ForeColor = Color.White,
                 Font = new Font("Yu Gothic UI", spec.Compact ? 13F : 22F, FontStyle.Bold),
             };
