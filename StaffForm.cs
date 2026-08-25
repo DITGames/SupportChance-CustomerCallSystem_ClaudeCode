@@ -5,6 +5,18 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
 {
     public partial class StaffForm : Form
     {
+        private const int TileWidth = 200;
+        private const int TileHeight = 150;
+        private const int TileMargin = 12;
+
+        private static readonly Color WaitingTileBack = Color.FromArgb(214, 234, 248);
+        private static readonly Color WaitingTileFore = Color.FromArgb(20, 60, 110);
+        private static readonly Color WaitingTileBorder = Color.FromArgb(120, 170, 220);
+
+        private static readonly Color CalledTileBack = Color.FromArgb(255, 229, 204);
+        private static readonly Color CalledTileFore = Color.FromArgb(140, 70, 20);
+        private static readonly Color CalledTileBorder = Color.FromArgb(224, 150, 90);
+
         private readonly CallQueueManager _manager;
         private readonly SettingsService _settingsService;
         private readonly AppSettings _settings;
@@ -32,12 +44,6 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
 
             txtNumber.KeyPress += TxtNumber_KeyPress;
             btnAdd.Click += BtnAdd_Click;
-            lstWaiting.SelectedIndexChanged += LstWaiting_SelectedIndexChanged;
-            lstCalled.SelectedIndexChanged += LstCalled_SelectedIndexChanged;
-            btnCall.Click += BtnCall_Click;
-            btnCancelWaiting.Click += BtnCancelWaiting_Click;
-            btnRecall.Click += BtnRecall_Click;
-            btnCompleteCalled.Click += BtnCompleteCalled_Click;
             btnSettings.Click += BtnSettings_Click;
             btnExit.Click += (_, _) => Close();
             FormClosing += StaffForm_FormClosing;
@@ -47,7 +53,6 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
 
             RefreshWaiting();
             RefreshCalled();
-            UpdateButtonStates();
         }
 
         private void TxtNumber_KeyPress(object? sender, KeyPressEventArgs e)
@@ -110,7 +115,7 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
         private bool TryAddOnEnter(KeyEventArgs e)
         {
             if (e.KeyCode != Keys.Enter) return false;
-            // フォーカスがボタン上にある場合はそのボタンのネイティブなEnterクリックを優先する。
+            // フォーカスがボタン上にある場合はそのボタンのネイティブなEnterクリック(=タップ相当)を優先する。
             if (ActiveControl is Button) return false;
             if (txtNumber.Text.Trim().Length == 0) return false;
 
@@ -123,9 +128,6 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
         private bool TryNavigateWithArrows(KeyEventArgs e)
         {
             if (e.KeyCode is not (Keys.Up or Keys.Down or Keys.Left or Keys.Right)) return false;
-
-            // リスト内では上下キーによる項目選択(ネイティブ動作)を優先する。
-            if (ActiveControl is ListBox && e.KeyCode is Keys.Up or Keys.Down) return false;
 
             // 番号入力欄では左右キーによるカーソル移動(ネイティブ動作)を優先する。
             if (ReferenceEquals(ActiveControl, txtNumber) && e.KeyCode is Keys.Left or Keys.Right) return false;
@@ -170,42 +172,46 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
             }
         }
 
-        private void LstWaiting_SelectedIndexChanged(object? sender, EventArgs e) => UpdateButtonStates();
-
-        private void LstCalled_SelectedIndexChanged(object? sender, EventArgs e) => UpdateButtonStates();
-
-        private void UpdateButtonStates()
+        /// <summary>待機中の番号ボタンをタップ(または選択してEnter)した際に呼び出しポップアップを表示する。</summary>
+        private void OpenWaitingActionPopup(int number)
         {
-            btnCall.Enabled = lstWaiting.SelectedItem != null;
-            btnCancelWaiting.Enabled = lstWaiting.SelectedItem != null;
-            btnRecall.Enabled = lstCalled.SelectedItem != null;
-            btnCompleteCalled.Enabled = lstCalled.SelectedItem != null;
+            using var popup = new NumberActionForm(
+                number,
+                new ActionSpec("呼び出す"),
+                new ActionSpec("取消", Compact: true, ConfirmMessage: $"番号 {number} の待機を取り消しますか？"));
+            popup.ShowDialog(this);
+
+            switch (popup.SelectedActionIndex)
+            {
+                case 0:
+                    _manager.Call(number);
+                    PlayCallSound();
+                    break;
+                case 1:
+                    _manager.CancelWaiting(number);
+                    break;
+            }
         }
 
-        private void BtnCall_Click(object? sender, EventArgs e)
+        /// <summary>呼び出し済みの番号ボタンをタップした際に再コール/削除ポップアップを表示する。</summary>
+        private void OpenCalledActionPopup(int number)
         {
-            if (lstWaiting.SelectedItem is not int number) return;
-            _manager.Call(number);
-            PlayCallSound();
-        }
+            using var popup = new NumberActionForm(
+                number,
+                new ActionSpec("再コール"),
+                new ActionSpec("削除"));
+            popup.ShowDialog(this);
 
-        private void BtnCancelWaiting_Click(object? sender, EventArgs e)
-        {
-            if (lstWaiting.SelectedItem is not int number) return;
-            _manager.CancelWaiting(number);
-        }
-
-        private void BtnRecall_Click(object? sender, EventArgs e)
-        {
-            if (lstCalled.SelectedItem is not int number) return;
-            _manager.Recall(number);
-            PlayCallSound();
-        }
-
-        private void BtnCompleteCalled_Click(object? sender, EventArgs e)
-        {
-            if (lstCalled.SelectedItem is not int number) return;
-            _manager.CompleteCall(number);
+            switch (popup.SelectedActionIndex)
+            {
+                case 0:
+                    _manager.Recall(number);
+                    PlayCallSound();
+                    break;
+                case 1:
+                    _manager.CompleteCall(number);
+                    break;
+            }
         }
 
         private void PlayCallSound()
@@ -225,26 +231,86 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
 
         private void RefreshWaiting()
         {
-            var selected = lstWaiting.SelectedItem as int?;
-            lstWaiting.Items.Clear();
-            foreach (var number in _manager.Waiting)
+            flowWaiting.SuspendLayout();
+            flowWaiting.Controls.Clear();
+
+            if (_manager.Waiting.Count == 0)
             {
-                lstWaiting.Items.Add(number);
+                flowWaiting.Controls.Add(CreatePlaceholderLabel("待機中の番号はありません"));
             }
-            if (selected.HasValue) lstWaiting.SelectedItem = selected.Value;
-            UpdateButtonStates();
+            else
+            {
+                foreach (var number in _manager.Waiting)
+                {
+                    var button = CreateNumberButton(number, WaitingTileBack, WaitingTileFore, WaitingTileBorder);
+                    button.Click += (_, _) => OpenWaitingActionPopup(number);
+                    flowWaiting.Controls.Add(button);
+                }
+            }
+
+            flowWaiting.ResumeLayout(true);
         }
 
         private void RefreshCalled()
         {
-            var selected = lstCalled.SelectedItem as int?;
-            lstCalled.Items.Clear();
-            foreach (var number in _manager.Called)
+            flowCalled.SuspendLayout();
+            flowCalled.Controls.Clear();
+
+            if (_manager.Called.Count == 0)
             {
-                lstCalled.Items.Add(number);
+                flowCalled.Controls.Add(CreatePlaceholderLabel("呼び出し済みの番号はありません"));
             }
-            if (selected.HasValue) lstCalled.SelectedItem = selected.Value;
-            UpdateButtonStates();
+            else
+            {
+                foreach (var number in _manager.Called)
+                {
+                    var button = CreateNumberButton(number, CalledTileBack, CalledTileFore, CalledTileBorder);
+                    button.Click += (_, _) => OpenCalledActionPopup(number);
+                    flowCalled.Controls.Add(button);
+                }
+            }
+
+            flowCalled.ResumeLayout(true);
+        }
+
+        /// <summary>
+        /// タッチパネルで押しやすい大きめの番号ボタンを作成する。
+        /// 待機中/呼び出し済みエリアに横方向優先(3〜4列)で並び、収まらない分は縦スクロールされる。
+        /// </summary>
+        private static Button CreateNumberButton(int number, Color backColor, Color foreColor, Color borderColor)
+        {
+            var button = new Button
+            {
+                Tag = number,
+                Text = number.ToString(),
+                AutoSize = false,
+                Width = TileWidth,
+                Height = TileHeight,
+                Margin = new Padding(TileMargin),
+                Font = new Font("Yu Gothic UI", 36F, FontStyle.Bold),
+                BackColor = backColor,
+                ForeColor = foreColor,
+                FlatStyle = FlatStyle.Flat,
+                UseVisualStyleBackColor = false,
+            };
+            button.FlatAppearance.BorderSize = 2;
+            button.FlatAppearance.BorderColor = borderColor;
+            return button;
+        }
+
+        private static Label CreatePlaceholderLabel(string text)
+        {
+            return new Label
+            {
+                Text = text,
+                AutoSize = false,
+                Width = 420,
+                Height = 60,
+                Margin = new Padding(TileMargin),
+                Font = new Font("Yu Gothic UI", 14F),
+                ForeColor = Color.Gray,
+                TextAlign = ContentAlignment.MiddleLeft,
+            };
         }
 
         private void StaffForm_FormClosing(object? sender, FormClosingEventArgs e)

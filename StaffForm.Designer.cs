@@ -21,17 +21,11 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
 
         private System.Windows.Forms.Panel panelWaiting;
         private System.Windows.Forms.Label lblWaitingTitle;
-        private System.Windows.Forms.ListBox lstWaiting;
-        private System.Windows.Forms.Panel panelWaitingButtons;
-        private System.Windows.Forms.Button btnCall;
-        private System.Windows.Forms.Button btnCancelWaiting;
+        private System.Windows.Forms.FlowLayoutPanel flowWaiting;
 
         private System.Windows.Forms.Panel panelCalled;
         private System.Windows.Forms.Label lblCalledTitle;
-        private System.Windows.Forms.ListBox lstCalled;
-        private System.Windows.Forms.Panel panelCalledButtons;
-        private System.Windows.Forms.Button btnRecall;
-        private System.Windows.Forms.Button btnCompleteCalled;
+        private System.Windows.Forms.FlowLayoutPanel flowCalled;
 
         /// <summary>
         ///  Clean up any resources being used.
@@ -68,25 +62,17 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
 
             panelWaiting = new System.Windows.Forms.Panel();
             lblWaitingTitle = new System.Windows.Forms.Label();
-            lstWaiting = new System.Windows.Forms.ListBox();
-            panelWaitingButtons = new System.Windows.Forms.Panel();
-            btnCall = new System.Windows.Forms.Button();
-            btnCancelWaiting = new System.Windows.Forms.Button();
+            flowWaiting = new System.Windows.Forms.FlowLayoutPanel();
 
             panelCalled = new System.Windows.Forms.Panel();
             lblCalledTitle = new System.Windows.Forms.Label();
-            lstCalled = new System.Windows.Forms.ListBox();
-            panelCalledButtons = new System.Windows.Forms.Panel();
-            btnRecall = new System.Windows.Forms.Button();
-            btnCompleteCalled = new System.Windows.Forms.Button();
+            flowCalled = new System.Windows.Forms.FlowLayoutPanel();
 
             panelTop.SuspendLayout();
             panelTopRight.SuspendLayout();
             tableLayoutMain.SuspendLayout();
             panelWaiting.SuspendLayout();
-            panelWaitingButtons.SuspendLayout();
             panelCalled.SuspendLayout();
-            panelCalledButtons.SuspendLayout();
             SuspendLayout();
 
             // txtNumber
@@ -154,38 +140,17 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
             lblWaitingTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             lblWaitingTitle.Padding = new System.Windows.Forms.Padding(10, 0, 0, 0);
 
-            // lstWaiting
-            lstWaiting.Dock = System.Windows.Forms.DockStyle.Fill;
-            lstWaiting.Font = new System.Drawing.Font("Yu Gothic UI", 20F);
-            lstWaiting.ItemHeight = 36;
-            lstWaiting.Name = "lstWaiting";
-
-            // btnCall
-            btnCall.Font = new System.Drawing.Font("Yu Gothic UI", 14F);
-            btnCall.Location = new System.Drawing.Point(10, 10);
-            btnCall.Name = "btnCall";
-            btnCall.Size = new System.Drawing.Size(180, 60);
-            btnCall.Text = "呼び出し";
-            btnCall.UseVisualStyleBackColor = true;
-
-            // btnCancelWaiting
-            btnCancelWaiting.Font = new System.Drawing.Font("Yu Gothic UI", 14F);
-            btnCancelWaiting.Location = new System.Drawing.Point(200, 10);
-            btnCancelWaiting.Name = "btnCancelWaiting";
-            btnCancelWaiting.Size = new System.Drawing.Size(180, 60);
-            btnCancelWaiting.Text = "削除";
-            btnCancelWaiting.UseVisualStyleBackColor = true;
-
-            // panelWaitingButtons
-            panelWaitingButtons.Controls.Add(btnCall);
-            panelWaitingButtons.Controls.Add(btnCancelWaiting);
-            panelWaitingButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
-            panelWaitingButtons.Height = 80;
-            panelWaitingButtons.Name = "panelWaitingButtons";
+            // flowWaiting: 番号ボタンをタッチしやすい大きさで横方向優先(3〜4列)に並べ、
+            // 画面に収まらない分は縦スクロールで表示する。
+            flowWaiting.Dock = System.Windows.Forms.DockStyle.Fill;
+            flowWaiting.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
+            flowWaiting.WrapContents = true;
+            flowWaiting.AutoScroll = true;
+            flowWaiting.BackColor = System.Drawing.Color.White;
+            flowWaiting.Name = "flowWaiting";
 
             // panelWaiting
-            panelWaiting.Controls.Add(lstWaiting);
-            panelWaiting.Controls.Add(panelWaitingButtons);
+            panelWaiting.Controls.Add(flowWaiting);
             panelWaiting.Controls.Add(lblWaitingTitle);
             panelWaiting.Dock = System.Windows.Forms.DockStyle.Fill;
             panelWaiting.Name = "panelWaiting";
@@ -200,38 +165,16 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
             lblCalledTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             lblCalledTitle.Padding = new System.Windows.Forms.Padding(10, 0, 0, 0);
 
-            // lstCalled
-            lstCalled.Dock = System.Windows.Forms.DockStyle.Fill;
-            lstCalled.Font = new System.Drawing.Font("Yu Gothic UI", 20F);
-            lstCalled.ItemHeight = 36;
-            lstCalled.Name = "lstCalled";
-
-            // btnRecall
-            btnRecall.Font = new System.Drawing.Font("Yu Gothic UI", 14F);
-            btnRecall.Location = new System.Drawing.Point(10, 10);
-            btnRecall.Name = "btnRecall";
-            btnRecall.Size = new System.Drawing.Size(180, 60);
-            btnRecall.Text = "再コール";
-            btnRecall.UseVisualStyleBackColor = true;
-
-            // btnCompleteCalled
-            btnCompleteCalled.Font = new System.Drawing.Font("Yu Gothic UI", 14F);
-            btnCompleteCalled.Location = new System.Drawing.Point(200, 10);
-            btnCompleteCalled.Name = "btnCompleteCalled";
-            btnCompleteCalled.Size = new System.Drawing.Size(180, 60);
-            btnCompleteCalled.Text = "削除";
-            btnCompleteCalled.UseVisualStyleBackColor = true;
-
-            // panelCalledButtons
-            panelCalledButtons.Controls.Add(btnRecall);
-            panelCalledButtons.Controls.Add(btnCompleteCalled);
-            panelCalledButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
-            panelCalledButtons.Height = 80;
-            panelCalledButtons.Name = "panelCalledButtons";
+            // flowCalled
+            flowCalled.Dock = System.Windows.Forms.DockStyle.Fill;
+            flowCalled.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
+            flowCalled.WrapContents = true;
+            flowCalled.AutoScroll = true;
+            flowCalled.BackColor = System.Drawing.Color.White;
+            flowCalled.Name = "flowCalled";
 
             // panelCalled
-            panelCalled.Controls.Add(lstCalled);
-            panelCalled.Controls.Add(panelCalledButtons);
+            panelCalled.Controls.Add(flowCalled);
             panelCalled.Controls.Add(lblCalledTitle);
             panelCalled.Dock = System.Windows.Forms.DockStyle.Fill;
             panelCalled.Name = "panelCalled";
@@ -259,9 +202,7 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
             panelTopRight.ResumeLayout(false);
             panelTop.ResumeLayout(false);
             panelTop.PerformLayout();
-            panelWaitingButtons.ResumeLayout(false);
             panelWaiting.ResumeLayout(false);
-            panelCalledButtons.ResumeLayout(false);
             panelCalled.ResumeLayout(false);
             tableLayoutMain.ResumeLayout(false);
             ResumeLayout(false);
