@@ -27,6 +27,9 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
 
             InitializeComponent();
 
+            KeyPreview = true;
+            KeyDown += StaffForm_KeyDown;
+
             txtNumber.KeyPress += TxtNumber_KeyPress;
             btnAdd.Click += BtnAdd_Click;
             lstWaiting.SelectedIndexChanged += LstWaiting_SelectedIndexChanged;
@@ -53,6 +56,91 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
             {
                 e.Handled = true;
             }
+        }
+
+        /// <summary>
+        /// テンキー・矢印キー・Enterキーのみで操作できるようにするためのフォーム全体のキー処理。
+        /// 数字キーはどこにフォーカスがあっても番号入力欄へ、Enterキーは番号の追加へ、
+        /// 矢印キーはコントロール間のフォーカス移動へルーティングする。
+        /// </summary>
+        private void StaffForm_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (TryRouteDigitToNumberBox(e)) return;
+            if (TryAddOnEnter(e)) return;
+            TryNavigateWithArrows(e);
+        }
+
+        private bool TryRouteDigitToNumberBox(KeyEventArgs e)
+        {
+            var digit = DigitFromKey(e.KeyCode);
+            if (digit < 0) return false;
+
+            if (!ReferenceEquals(ActiveControl, txtNumber))
+            {
+                txtNumber.Focus();
+                txtNumber.SelectionStart = txtNumber.TextLength;
+                txtNumber.SelectionLength = 0;
+            }
+
+            var start = txtNumber.SelectionStart;
+            var text = txtNumber.Text;
+            if (txtNumber.SelectionLength > 0)
+            {
+                text = text.Remove(start, txtNumber.SelectionLength);
+            }
+
+            if (text.Length < txtNumber.MaxLength)
+            {
+                txtNumber.Text = text.Insert(start, digit.ToString());
+                txtNumber.SelectionStart = start + 1;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            return true;
+        }
+
+        private static int DigitFromKey(Keys keyCode)
+        {
+            if (keyCode is >= Keys.D0 and <= Keys.D9) return keyCode - Keys.D0;
+            if (keyCode is >= Keys.NumPad0 and <= Keys.NumPad9) return keyCode - Keys.NumPad0;
+            return -1;
+        }
+
+        private bool TryAddOnEnter(KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter) return false;
+            // フォーカスがボタン上にある場合はそのボタンのネイティブなEnterクリックを優先する。
+            if (ActiveControl is Button) return false;
+            if (txtNumber.Text.Trim().Length == 0) return false;
+
+            BtnAdd_Click(this, EventArgs.Empty);
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            return true;
+        }
+
+        private bool TryNavigateWithArrows(KeyEventArgs e)
+        {
+            if (e.KeyCode is not (Keys.Up or Keys.Down or Keys.Left or Keys.Right)) return false;
+
+            // リスト内では上下キーによる項目選択(ネイティブ動作)を優先する。
+            if (ActiveControl is ListBox && e.KeyCode is Keys.Up or Keys.Down) return false;
+
+            // 番号入力欄では左右キーによるカーソル移動(ネイティブ動作)を優先する。
+            if (ReferenceEquals(ActiveControl, txtNumber) && e.KeyCode is Keys.Left or Keys.Right) return false;
+
+            var forward = e.KeyCode is Keys.Down or Keys.Right;
+            var next = GetNextControl(ActiveControl, forward);
+            while (next != null && (!next.TabStop || !next.CanSelect))
+            {
+                next = GetNextControl(next, forward);
+            }
+            next?.Focus();
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            return true;
         }
 
         private void BtnAdd_Click(object? sender, EventArgs e)
