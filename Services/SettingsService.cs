@@ -5,9 +5,9 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode.Services
 {
     public class SettingsService
     {
-        private static readonly string Dir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "SupportChanceCallSystem");
+        // 実行ファイルと同じフォルダ配下の "data" に設定を保存する。
+        // (アプリのフォルダごと移動・バックアップすればデータも一緒についてくる)
+        private static readonly string Dir = Path.Combine(AppContext.BaseDirectory, "data");
 
         private static readonly string SettingsPath = Path.Combine(Dir, "settings.json");
 
