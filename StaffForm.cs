@@ -175,42 +175,34 @@ namespace SupportChance_CustomerCallSystem_ClaudeCode
         /// <summary>待機中の番号ボタンをタップ(または選択してEnter)した際に呼び出しポップアップを表示する。</summary>
         private void OpenWaitingActionPopup(int number)
         {
-            using var popup = new NumberActionForm(
-                number,
-                new ActionSpec("呼び出す"),
-                new ActionSpec("取消", Compact: true, ConfirmMessage: $"番号 {number} の待機を取り消しますか？"));
+            using var popup = new WaitingActionForm(number);
             popup.ShowDialog(this);
 
-            switch (popup.SelectedActionIndex)
+            if (popup.CallRequested)
             {
-                case 0:
-                    _manager.Call(number);
-                    PlayCallSound();
-                    break;
-                case 1:
-                    _manager.CancelWaiting(number);
-                    break;
+                _manager.Call(number);
+                PlayCallSound();
+            }
+            else if (popup.CancelRequested)
+            {
+                _manager.CancelWaiting(number);
             }
         }
 
         /// <summary>呼び出し済みの番号ボタンをタップした際に再コール/削除ポップアップを表示する。</summary>
         private void OpenCalledActionPopup(int number)
         {
-            using var popup = new NumberActionForm(
-                number,
-                new ActionSpec("再コール", Compact: true, AccentColor: Color.FromArgb(60, 160, 130)),
-                new ActionSpec("削除"));
+            using var popup = new CalledActionForm(number);
             popup.ShowDialog(this);
 
-            switch (popup.SelectedActionIndex)
+            if (popup.RecallRequested)
             {
-                case 0:
-                    _manager.Recall(number);
-                    PlayCallSound();
-                    break;
-                case 1:
-                    _manager.CompleteCall(number);
-                    break;
+                _manager.Recall(number);
+                PlayCallSound();
+            }
+            else if (popup.DeleteRequested)
+            {
+                _manager.CompleteCall(number);
             }
         }
 
